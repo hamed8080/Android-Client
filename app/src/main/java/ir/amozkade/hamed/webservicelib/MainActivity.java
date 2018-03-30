@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity  implements WebService.OnRes
 
 
     @Override
-    public void response(Response response, int id) {
+    public void response(Response response, Integer id) {
         if (response.responseCode == StatusCode.OK) {
             switch (id) {
             }

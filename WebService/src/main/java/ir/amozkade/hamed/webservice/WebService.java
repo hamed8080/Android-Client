@@ -36,7 +36,7 @@ public class WebService {
 
 
     public interface OnResponse {
-        void response(Response response, int id);
+        void response(Response response, Integer id);
     }
 
     public interface OnResponseStringDownload {
@@ -56,6 +56,8 @@ public class WebService {
     private Integer requestID = null;
     private String method = "GET";
     HashMap<String, Object> parameters;
+    private String jsonObject;
+    private String jsonArray;
     private String url;
     OnResponse onResponse = null;
     Response response = null;
@@ -73,8 +75,7 @@ public class WebService {
     private OnDownload onDownloadListener;
     private Handler handler;
     private OnResponseStringDownload stringDownloadListener;
-    String responseString ;
-
+    String responseString;
 
 
     public static String GET = "GET";
@@ -144,6 +145,24 @@ public class WebService {
      */
     public WebService setParameters(HashMap<String, Object> parameters) {
         this.parameters = parameters;
+        return this;
+    }
+
+    /**
+     * @param jsonObject String is JsonObject
+     * @since send data to server
+     */
+    public WebService setJsonObjectString(String jsonObject) {
+        this.jsonObject = jsonObject;
+        return this;
+    }
+
+    /**
+     * @param jsonArray String is JsonArray
+     * @since send data to server
+     */
+    public WebService setJsonArrayString(String jsonArray) {
+        this.jsonArray = jsonArray;
         return this;
     }
 
@@ -250,7 +269,18 @@ public class WebService {
                 OutputStream os = connection.getOutputStream();
                 BufferedWriter writer = new BufferedWriter(
                         new OutputStreamWriter(os, charset), 30);
-                writer.write(ConvertHashToJsonArray(parameters, false));
+                if (parameters != null && (jsonArray != null || jsonObject != null) || (jsonArray != null && jsonObject != null)) {
+                    throw new Exception("cant add parameter HashMap and JsonObject or JsonArray together");
+                }
+                String sendParam = "";
+                if (parameters != null) {
+                    sendParam = (ConvertHashToJsonArray(parameters, false));
+                } else if (jsonObject != null) {
+                    sendParam = jsonObject;
+                } else if (jsonArray != null) {
+                    sendParam = jsonArray;
+                }
+                writer.write(sendParam);
                 writer.flush();
                 writer.close();
                 os.close();
@@ -452,7 +482,18 @@ public class WebService {
                 OutputStream os = connection.getOutputStream();
                 BufferedWriter writer = new BufferedWriter(
                         new OutputStreamWriter(os, charset));
-                writer.write(ConvertHashToJsonArray(parameters, false));
+                if (parameters != null && (jsonArray != null || jsonObject != null) || (jsonArray != null && jsonObject != null)) {
+                    throw new Exception("cant add parameter HashMap and JsonObject or JsonArray together");
+                }
+                String sendParam = "";
+                if (parameters != null) {
+                    sendParam = (ConvertHashToJsonArray(parameters, false));
+                } else if (jsonObject != null) {
+                    sendParam = jsonObject;
+                } else if (jsonArray != null) {
+                    sendParam = jsonArray;
+                }
+                writer.write(sendParam);
                 writer.flush();
                 writer.close();
                 os.close();
