@@ -294,7 +294,7 @@ public class WebService {
             }
             JSONObject jsonObject = new JSONObject(response.toString());
             message = jsonObject.getString("Message");
-            final JSONArray jsonArray = !jsonObject.isNull("Data") ? jsonObject.getJSONArray("Data") : null;
+            final JSONArray jsonArray = !jsonObject.isNull("Data") ? new JSONArray(jsonObject.get("Data").toString()) : null;
             return new Response() {{
                 message = WebService.this.message;
                 data = jsonArray;
