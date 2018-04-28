@@ -1,5 +1,7 @@
 package ir.amozkade.hamed.webservice;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.util.Base64;
@@ -35,6 +37,8 @@ import java.util.Map;
 public class WebService {
 
 
+
+
     public interface OnResponse {
         void response(Response response, Integer id);
     }
@@ -66,7 +70,8 @@ public class WebService {
     private String authorization = null;
     private String message;
     private int responseCode;
-
+    private String jwt;
+    private boolean isToken=false;
 
     /**
      * @since for Downloader
@@ -113,6 +118,18 @@ public class WebService {
     }
 
     /**
+     * @param jwt token to authorize request
+     */
+    public WebService setJwt(String jwt) {
+        this.jwt = jwt;
+        return this;
+    }
+
+    public WebService getToken(boolean b) {
+        this.isToken= true;
+        return this;
+    }
+    /**
      * @param method GET,POST,DELETE ,...
      * @since use WebService static fields Like 'WebService.POST'
      */
@@ -122,8 +139,8 @@ public class WebService {
     }
 
     /**
-     * @param url url to send request
-     * @since this must be HTTP OR HTTPS request url
+     * @param url loginUrl to send request
+     * @since this must be HTTP OR HTTPS request loginUrl
      */
     public WebService setUrl(String url) {
         this.url = url;
@@ -185,6 +202,9 @@ public class WebService {
         this.contentType = contentType;
         return this;
     }
+
+
+
 
     public WebService setAuthorization(String userName, String password) {
         this.authorization = Base64.encodeToString((userName + ":" + password).getBytes(), Base64.DEFAULT);
@@ -262,7 +282,9 @@ public class WebService {
             connection.setReadTimeout(timeOut);
             connection.setConnectTimeout(connectTimeout);
             connection.setDoInput(true);
-            connection.setRequestProperty("Authorization", "Basic " + authorization);
+            if (jwt != null) {
+                connection.setRequestProperty("Authorization", "Bearer " + jwt);
+            }
             if (!method.equals(WebService.GET)) {
                 connection.setDoOutput(true);
                 connection.setRequestProperty("Content-Type", contentType);
@@ -287,6 +309,18 @@ public class WebService {
             }
 
             responseCode = connection.getResponseCode();
+            if (responseCode == StatusCode.UNAUTHORIZED || responseCode == StatusCode.Forbidden) {
+                Response resNotAuthorize = new Response();
+                resNotAuthorize.setResponseCode(StatusCode.UNAUTHORIZED);
+                return resNotAuthorize;
+            }
+            if(isToken){
+                Response resToken = new Response();
+                String jwt =  connection.getHeaderField("Authorization").replace("Bearer ","");
+                resToken.setMessage(jwt);
+                resToken.setResponseCode(StatusCode.OK);
+                return resToken;
+            }
             String line;
             BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
             while ((line = br.readLine()) != null) {
@@ -300,8 +334,6 @@ public class WebService {
                 data = jsonArray;
                 responseCode = WebService.this.responseCode;
             }};
-
-
         } catch (SocketTimeoutException e) {
             e.printStackTrace();
             return new Response() {{
@@ -536,5 +568,90 @@ public class WebService {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static class TokenHandler {
+        private String method = WebService.POST;
+        private Context context;
+        private SharedPreferences preferences;
+        private TokenListener tokenListener;
+        private Integer id;
+
+        public TokenHandler(Context context) {
+            this.context = context;
+            preferences = context.getSharedPreferences("TokenHandler", Context.MODE_PRIVATE);
+        }
+
+        public interface TokenListener {
+            void onArrive(String jwt, Integer id);
+
+            void onFail(String message, int statusCode, Integer id);
+        }
+
+        public void saveCredential(String loginUrl, String cred, String jwt) {
+            preferences.edit()
+                    .putString("loginUrl", loginUrl)
+                    .putString("cred", cred)
+                    .putString("jwt", jwt)
+                    .apply();
+        }
+
+        public void getNewToken() {
+            connect();
+        }
+
+        public void getNewToken(TokenListener tokenListener,Integer id) {
+            this.tokenListener = tokenListener;
+            this.id = id;
+        }
+
+        public void connect() {
+            String loginUrl = preferences.getString("loginUrl", null);
+            String cred = preferences.getString("cred", null);
+            if (loginUrl == null) {
+                try {
+                    throw new Exception("url must be set!");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            } else if (cred == null) {
+                try {
+                    throw new Exception("cred must be set!");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            new WebService()
+                    .setUrl(loginUrl)
+                    .setMethod(WebService.POST)
+                    .getToken(true)
+                    .setJsonObjectString(cred)
+                    .setOnResponseListener(new WebService.OnResponse() {
+                        @Override
+                        public void response(final Response response, Integer id) {
+                            if (response.getResponseCode() == StatusCode.OK) {
+                                preferences.edit().putString("jwt", response.getMessage()).apply();//only jwt token inside message filed
+                                if (tokenListener != null) {
+                                    tokenListener.onArrive(response.getMessage(),TokenHandler.this.id);
+                                }
+                            }
+                            if (response.getResponseCode() == StatusCode.UNAUTHORIZED) {
+                                if (tokenListener != null) {
+                                    tokenListener.onFail(response.getMessage(), StatusCode.UNAUTHORIZED,TokenHandler.this.id);
+                                }
+                            }
+                        }
+                    }).connect();
+        }
+
+        public String getJwt() {
+            return preferences.getString("jwt", null);
+        }
+    }
+    public static void callTokenHandler(WebService.TokenHandler.TokenListener tokenListener,Context context, Integer id) {
+        WebService.TokenHandler tokenHandler = new WebService.TokenHandler(context);
+        tokenHandler.getNewToken(tokenListener, id);
+        tokenHandler.connect();
     }
 }

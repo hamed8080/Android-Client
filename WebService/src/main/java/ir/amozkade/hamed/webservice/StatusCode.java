@@ -10,6 +10,7 @@ public  class StatusCode {
     public static int NoContent = 204;
     public static int REQUEST_ERROR = 400;
     public static int UNAUTHORIZED = 401;
+    public static int Forbidden = 403;
     public static int FOUND = 302;
     public static int MOVED = 301;
     public static int NOT_FOUND = 404;
