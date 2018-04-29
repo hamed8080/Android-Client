@@ -6,6 +6,8 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.util.Base64;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -326,52 +328,40 @@ public class WebService {
             while ((line = br.readLine()) != null) {
                 response.append(line);
             }
-            JSONObject jsonObject = new JSONObject(response.toString());
-            message = jsonObject.getString("Message");
-            final JSONArray jsonArray = !jsonObject.isNull("Data") ? new JSONArray(jsonObject.get("Data").toString()) : null;
-            return new Response() {{
-                message = WebService.this.message;
-                data = jsonArray;
-                responseCode = WebService.this.responseCode;
-            }};
+            return new ObjectMapper().readValue(response.toString(),Response.class);
         } catch (SocketTimeoutException e) {
             e.printStackTrace();
-            return new Response() {{
-                message = "زمان اتصال به سرور طولانی شد!";
-                data = null;
-                responseCode = StatusCode.REQUEST_ERROR;
-            }};
+            return new Response()
+                    .setMessage("زمان اتصال به سرور طولانی شد!")
+                    .setData(null)
+                    .setResponseCode(StatusCode.REQUEST_ERROR);
         } catch (JSONException e) {
             e.printStackTrace();
-            return new Response() {{
-                message = "مشکل در ارسال درخواست";
-                data = null;
-                responseCode = StatusCode.REQUEST_ERROR;
-            }};
+            return new Response()
+                    .setMessage("مشکل در ارسال درخواست")
+                    .setData(null)
+                    .setResponseCode(StatusCode.REQUEST_ERROR);
         } catch (MalformedURLException e) {
             e.printStackTrace();
-            return new Response() {{
-                message = "مشکل در ارسال درخواست";
-                data = null;
-                responseCode = StatusCode.REQUEST_ERROR;
-            }};
+            return new Response()
+                    .setMessage("مشکل در ارسال درخواست")
+                    .setData(null)
+                    .setResponseCode(StatusCode.REQUEST_ERROR);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             if (message == null) {
                 message = "مشکل در احراز هویت";
             }
-            return new Response() {{
-                message = WebService.this.message;
-                data = null;
-                responseCode = WebService.this.responseCode;
-            }};
+            return new Response()
+                    .setMessage(WebService.this.message)
+                    .setData(null)
+                    .setResponseCode(WebService.this.responseCode);
         } catch (Exception e) {
             e.printStackTrace();
-            return new Response() {{
-                message = "مشکل در ارسال درخواست";
-                data = null;
-                responseCode = StatusCode.REQUEST_ERROR;
-            }};
+            return new Response()
+                    .setMessage("مشکل در ارسال درخواست")
+                    .setData(null)
+                    .setResponseCode(StatusCode.REQUEST_ERROR);
         }
     }
 

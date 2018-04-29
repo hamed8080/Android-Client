@@ -7,6 +7,8 @@ import android.support.v7.app.AppCompatActivity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.HashMap;
+
 import ir.amozkade.hamed.webservice.Response;
 import ir.amozkade.hamed.webservice.StatusCode;
 import ir.amozkade.hamed.webservice.WebService;
@@ -71,10 +73,13 @@ public class MainActivity extends AppCompatActivity implements
 //            e.printStackTrace();
 //        }
 
+        HashMap<String ,Object> params = new HashMap<>();
+        params.put("topicId",61);
         new WebService()
                 .setJwt(new WebService.TokenHandler(this).getJwt())
                 .setMethod(WebService.GET)
-                .setUrl("http://192.168.1.7:9090/Topic/Popular")
+                .setUrl("http://192.168.1.7:9090/Topic/")
+                .setParameters(params)
                 .setOnResponseListener(new WebService.OnResponse() {
                     @Override
                     public void response(Response response, Integer id) {
