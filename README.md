@@ -1,9 +1,9 @@
 Android Client is Powerfull client for request and download file in android with ultra simple builder design pattern .
-this libs can be attached to android applications as moudle .
-some of feature is :
-1- jwt authorization
-2- download manager
-3- string downloader for download file like image base64 encoded
+this libs can be attached to android applications as moudle .<br/>
+some of feature is : <br/>
+1- jwt authorization<br/>
+2- download manager<br/>
+3- string downloader for download file like image base64 encoded<br/>
 <h3>Usage</h3>
 1- download aar file and add it like a moudle  from new->moudle->add jar or aar<br/>
 2-  check gradle of app level have this line
