@@ -38,9 +38,6 @@ import java.util.Map;
  */
 public class WebService {
 
-
-
-
     public interface OnResponse {
         void response(Response response, Integer id);
     }

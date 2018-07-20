@@ -3,12 +3,14 @@ package ir.amozkade.hamed.webservicelib;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.HashMap;
 
+import ir.amozkade.hamed.webservice.BuildConfig;
 import ir.amozkade.hamed.webservice.Response;
 import ir.amozkade.hamed.webservice.StatusCode;
 import ir.amozkade.hamed.webservice.WebService;
@@ -72,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements
 //        } catch (JsonProcessingException e) {
 //            e.printStackTrace();
 //        }
-
+        Log.d("VersionCode",""+BuildConfig.VERSION_CODE);
         HashMap<String ,Object> params = new HashMap<>();
         params.put("topicId",61);
         new WebService()
